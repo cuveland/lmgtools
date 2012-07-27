@@ -5,14 +5,14 @@
 # Implement interface to ZES Zimmer LMG95 Power Meter
 # via RS232-Ethernet converter
 #
-# 2012-07, Jan de Cuveland
+# 2012-07, Jan de Cuveland, Dirk Hutter
 
-import socket
+import socket, telnetlib
 
 EOS = "\r\n"
 TIMEOUT = 5
 
-class scpi:
+class scpi_socket:
     def __init__(self, host = "", port = 0):
         self._s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if port > 0:
@@ -40,6 +40,9 @@ class scpi:
         if result != "1":
             print "opc returned unexpected value:", result
 
+    def send_brk(self, ctrl):
+        pass
+
     def query(self, msg):
         self.send(msg)
         return self.recv_str()
@@ -51,10 +54,55 @@ class scpi:
         self.close()
 
 
-class lmg95(scpi):
+class scpi_telnet:
+    
+    def __init__(self, host = "", port = 0): 
+        self._t = telnetlib.Telnet() 
+        if port > 0:
+            self.connect(host, port)
+
+    def connect(self, host, port):
+        self._t.open(host, port, TIMEOUT)
+
+    def close(self): 
+        self._t.close()
+
+    def recv_str(self):
+        response = self._t.read_until(EOS, TIMEOUT)
+        if response[-len(EOS):] != EOS:
+            print "error: recv timeout"
+        return response[:-len(EOS)]
+
+    def send(self, msg):
+        self._t.write(msg + EOS)
+
+    def send_raw(self, msg):
+        self._t.get_socket().sendall(msg)
+
+    def query(self, cmd): 
+        self.send(cmd) 
+        return self.recv_str()
+
+    def send_cmd(self, cmd):
+        result = self.query(cmd + ";*OPC?")
+        if result != "1":
+            print "opc returned unexpected value:", result
+
+    def send_brk(self):
+        self.send_raw(chr(255) + chr(243))
+
+    def get_socket(self):
+        return self._t.get_socket()
+
+    def __del__(self):
+        self.close()
+
+
+class lmg95(scpi_telnet):
     _short_commands_enabled = False
 
     def reset(self):
+        self.send_brk()
         self.send_cmd("*cls")
         self.send_cmd("*rst")
     
@@ -117,3 +165,6 @@ class lmg95(scpi):
     def cont_off(self):
         self.send_short("cont off")
         
+    def disconnect(self):
+        self.goto_local
+        self.close()
