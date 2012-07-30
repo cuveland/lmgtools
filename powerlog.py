@@ -42,7 +42,7 @@ def main():
         while True:
             data = lmg.read_values()
             i += 1
-            sys.stdout.write("\r{}".format(i))
+            sys.stdout.write("\r{0}".format(i))
             sys.stdout.flush()
             data.insert(0, time.time())
             log.write(" ".join([ str(x) for x in data ]) + "\n")
