@@ -50,8 +50,8 @@ def main():
      
     lmg.cont_off()
     log.close()
-    lmg.goto_scpi_commands()
-    lmg.goto_local()
+
+    lmg.disconnect()
     print "done,", i, "measurements written"
 
 

@@ -172,5 +172,6 @@ class lmg95(scpi_telnet):
         self.send_short("cont off")
         
     def disconnect(self):
-        self.goto_local
-        self.close()
+        self.send_brk()
+        self.read_errors()
+        self.goto_local()
