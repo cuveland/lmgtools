@@ -27,6 +27,7 @@ def main():
      
     print "device found:", lmg.read_id()[1]
 
+    print "setting up device"
     errors = lmg.read_errors()
     lmg.set_ranges(10., 250.)
     lmg.select_values(VAL)
