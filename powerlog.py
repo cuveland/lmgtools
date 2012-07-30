@@ -15,7 +15,7 @@ def main():
         description = "Log measured values from ZES Zimmer LMG95 Power Meter")
     parser.add_argument("host", help = "Hostname of RS232-Ethernet converter")
     parser.add_argument("logfile", help = "Log file name")
-    parser.add_argument("-p", "--port", dest = "port", type = int, default=2101,
+    parser.add_argument("-p", "--port", dest = "port", type = int, default=2001,
                         help = "TCP port of RS232-Ethernet converter")
     args = parser.parse_args()
 
