@@ -17,6 +17,6 @@ How to set up:
   - 115200 8N1, Echo: off, EOS: Terminal, Protocol: RTS/CTS
 
 Hot to start a measurement:
-- Enter, e.g.: "./powerlog.py 10.0.0.10 powerlog"
+- Enter, e.g.: "./powerlog.py power.compeng.uni-frankfurt.de powerlog"
   with the IP address of the Ethernet device server
 

@@ -26,10 +26,11 @@ def main():
     lmg.reset()
      
     print "device found:", lmg.read_id()[1]
-     
+
     errors = lmg.read_errors()
+    lmg.set_ranges(10., 250.)
     lmg.select_values(VAL)
-     
+
     log = open(args.logfile, "w");
     i = 0
     try:

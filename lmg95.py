@@ -152,6 +152,12 @@ class lmg95(scpi_telnet):
     def read_errors(self):
         return self.query_scpi("syst:err:all?")
 
+    def set_ranges(self, current, voltage):
+        self.send_short_cmd("iam manual");
+        self.send_short_cmd("irng " + str(current))
+        self.send_short_cmd("uam manual");
+        self.send_short_cmd("urng " + str(voltage))
+
     def select_values(self, values):
         self.send_short("actn;" + "?;".join(values) + "?")
 
