@@ -2,7 +2,7 @@
 
 # lmg670.py
 #
-# Implement interface to ZES Zimmer LMG670 Power Meter
+# Implement interface to ZES Zimmer LMG670 1 to 7 Channel Power Analyzer
 #
 # 2015-01, Jan de Cuveland
 
@@ -11,7 +11,7 @@ import socket
 EOS = "\n"
 TIMEOUT = 2
 
-class lmg_socket:
+class lmg670_socket:
     def __init__(self, host = ""):
         self._s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if host != "":
@@ -68,7 +68,7 @@ class lmg_socket:
         self.close()
 
 
-class lmg670(lmg_socket):
+class lmg670(lmg670_socket):
     _short_commands_enabled = False
 
     def reset(self):

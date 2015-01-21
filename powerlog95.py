@@ -2,7 +2,7 @@
 
 # powerlog95.py
 #
-# Log measured values from ZES Zimmer LMG95 Power Meter
+# Log measured values from ZES Zimmer LMG95 Power Analyzer
 #
 # 2012-07, Jan de Cuveland
 

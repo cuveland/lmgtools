@@ -2,7 +2,7 @@
 
 # lmg95.py
 #
-# Implement interface to ZES Zimmer LMG95 Power Meter
+# Implement interface to ZES Zimmer LMG95 1 Phase Power Analyzer
 # via RS232-Ethernet converter
 #
 # 2012-07, Jan de Cuveland, Dirk Hutter

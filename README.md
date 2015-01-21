@@ -1,5 +1,5 @@
-Cross-platform Tools for ZES Zimmer Precision Power Meters
-==========================================================
+Cross-platform Tools for ZES Zimmer Precision Power Analyzers
+=============================================================
 2012-2015, Jan de Cuveland, Goethe-Universität Frankfurt am Main
 
 LMG95
@@ -21,7 +21,7 @@ How to set up:
 
 How to start a measurement:
 
-- Enter, e.g.: "`./powerlog95.py power.example.com powerlog`"
+- Enter, e.g.: "`./powerlog95.py power.example.com powerlog`"  
   with the IP address or hostname of the Ethernet device server
 
 LMG670
@@ -35,5 +35,5 @@ How to set up:
 
 Hot to start a measurement:
 
-- Enter, e.g.: "`./powerlog670.py 192.0.2.2 powerlog`"
+- Enter, e.g.: "`./powerlog670.py 192.0.2.2 powerlog`"  
   with the assigned IP address of the LMG670

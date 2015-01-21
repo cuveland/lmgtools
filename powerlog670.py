@@ -2,7 +2,7 @@
 
 # powerlog670.py
 #
-# Log measured values from ZES Zimmer LMG670 Power Meter
+# Log measured values from ZES Zimmer LMG670 Power Analyzer
 #
 # 2015-01, Jan de Cuveland
 
