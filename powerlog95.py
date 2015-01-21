@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# powerlog.py
+# powerlog95.py
 #
 # Log measured values from ZES Zimmer LMG95 Power Meter
 #
