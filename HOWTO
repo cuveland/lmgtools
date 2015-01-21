@@ -1,7 +1,9 @@
-Cross-platform tools for ZES Zimmer LMG95 Precision Power Meter
----------------------------------------------------------------
-2012, Jan de Cuveland, Goethe-Universitaet Frankfurt am Main
+Cross-platform tools for ZES Zimmer Precision Power Meters
+----------------------------------------------------------
+2012-2015, Jan de Cuveland, Goethe-Universitaet Frankfurt am Main
 
+LMG95
+-----
 
 How to set up:
 - Connect the "Digi Connect SP RS232" Ethernet device server to your network
@@ -17,6 +19,17 @@ How to set up:
   - 115200 8N1, Echo: off, EOS: Terminal, Protocol: RTS/CTS
 
 Hot to start a measurement:
-- Enter, e.g.: "./powerlog.py power.compeng.uni-frankfurt.de powerlog"
-  with the IP address of the Ethernet device server
+- Enter, e.g.: "./powerlog95.py power.example.com powerlog"
+  with the IP address or hostname of the Ethernet device server
 
+LMG670
+------
+
+How to set up:
+- Connect the ZES Zimmer LMG670 to your DHCP-enabled network
+- Switch on LMG670
+- Note the assigned IP address (INSTR -> Interface -> IP Address)
+
+Hot to start a measurement:
+- Enter, e.g.: "./powerlog670.py 192.0.2.2 powerlog"
+  with the IP address of the LMG670
