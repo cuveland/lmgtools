@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # lmg95.py
 #
@@ -9,7 +9,7 @@
 
 import socket, telnetlib
 
-EOS = "\r\n"
+EOS = b"\r\n"
 TIMEOUT = 5
 
 class scpi_socket:
@@ -26,19 +26,19 @@ class scpi_socket:
         self._s.sendall(msg + EOS)
 
     def recv_str(self):
-        response = ""
+        response = b""
         while response[-len(EOS):] != EOS:
             try:
                 response += self._s.recv(4096)
             except socket.timeout as e:
-                print "error:", e
-                return ""
+                print("error:", e)
+                return b""
         return response[:-len(EOS)]
 
     def send_cmd(self, cmd):
-        result = self.query(cmd + ";*OPC?")
-        if result != "1":
-            print "opc returned unexpected value:", result
+        result = self.query(cmd + b";*OPC?")
+        if result != b"1":
+            print("opc returned unexpected value:", result)
 
     def send_brk(self, ctrl):
         pass
@@ -70,7 +70,7 @@ class scpi_telnet:
     def recv_str(self):
         response = self._t.read_until(EOS, TIMEOUT)
         if response[-len(EOS):] != EOS:
-            print "error: recv timeout"
+            print("error: recv timeout")
         return response[:-len(EOS)]
 
     def send(self, msg):
@@ -84,12 +84,12 @@ class scpi_telnet:
         return self.recv_str()
 
     def send_cmd(self, cmd):
-        result = self.query(cmd + ";*OPC?")
-        if result != "1":
-            print "opc returned unexpected value:", result
+        result = self.query(cmd + b";*OPC?")
+        if result != b"1":
+            print("opc returned unexpected value:", result)
 
     def send_brk(self):
-        self.send_raw(chr(255) + chr(243))
+        self.send_raw(b"\xff\xf3")
 
     def get_socket(self):
         return self._t.get_socket()
@@ -103,17 +103,17 @@ class lmg95(scpi_telnet):
 
     def reset(self):
         self.send_brk()
-        self.send_cmd("*cls")
-        self.send_cmd("*rst")
+        self.send_cmd(b"*cls")
+        self.send_cmd(b"*rst")
     
     def goto_short_commands(self):
         if not self._short_commands_enabled:
-            self.send("syst:lang short")
+            self.send(b"syst:lang short")
         self._short_commands_enabled = True
 
     def goto_scpi_commands(self):
         if self._short_commands_enabled:
-            self.send("lang scpi")
+            self.send(b"lang scpi")
         self._short_commands_enabled = False
 
     def send_short(self, msg):
@@ -141,35 +141,37 @@ class lmg95(scpi_telnet):
         return self.query(msg)
 
     def goto_local(self):
-        self.send("gtl")
+        self.send(b"gtl")
 
     def read_id(self):
-        return self.query("*idn?").split(",")
+        return self.query(b"*idn?").split(b",")
 
     def beep(self):
-        self.send_short_cmd("beep")
+        self.send_short_cmd(b"beep")
 
     def read_errors(self):
-        return self.query_scpi("syst:err:all?")
+        return self.query_scpi(b"syst:err:all?")
 
     def set_ranges(self, current, voltage):
-        self.send_short_cmd("iam manual");
-        self.send_short_cmd("irng " + str(current))
-        self.send_short_cmd("uam manual");
-        self.send_short_cmd("urng " + str(voltage))
+        self.send_short_cmd(b"iam manual");
+        self.send_short_cmd(b"irng %d" % current)
+        self.send_short_cmd(b"uam manual");
+        self.send_short_cmd(b"urng %d" % voltage)
 
     def select_values(self, values):
-        self.send_short("actn;" + "?;".join(values) + "?")
+        self.send_short(b"actn;" + b"?;".join(values) + b"?")
 
     def read_values(self):
-        values_raw = self.recv_str().split(";")
-        return [ float(x) for x in values_raw ]
+        values_raw = self.recv_str().decode('ascii').strip()
+        if len(values_raw) == 0:
+            return []
+        return [ float(x) for x in values_raw.split(";") ]
 
     def cont_on(self):
-        self.send_short("cont on")
+        self.send_short(b"cont on")
 
     def cont_off(self):
-        self.send_short("cont off")
+        self.send_short(b"cont off")
         
     def disconnect(self):
         self.read_errors()

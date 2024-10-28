@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # powerlog95.py
 #
@@ -8,7 +8,7 @@
 
 import argparse, sys, time, lmg95
 
-VAL = "count sctc cycr utrms itrms udc idc ucf icf uff iff p pf freq".split()
+VAL = b"count sctc cycr utrms itrms udc idc ucf icf uff iff p pf freq".split()
 
 def main():
     parser = argparse.ArgumentParser(
@@ -24,35 +24,35 @@ def main():
                         help = "Measurement interval in seconds")
     args = parser.parse_args()
 
-    print "connecting to", args.host, "at port", args.port
+    print("connecting to", args.host, "at port", args.port)
     lmg = lmg95.lmg95(args.host, args.port)
      
-    print "performing device reset"
+    print("performing device reset")
     lmg.reset()
      
-    print "device found:", lmg.read_id()[1]
+    print("device found:", lmg.read_id()[1])
 
-    print "setting up device"
+    print("setting up device")
     errors = lmg.read_errors()
 
-        # set measuremnt interval
-    lmg.send_short_cmd("CYCL " + str(args.interval));
+    # set measuremnt interval
+    lmg.send_short_cmd(b"CYCL %d" % args.interval)
 
-        # 60Hz low pass
+    # 60Hz low pass
     if args.lowpass == True:
-        lmg.send_short_cmd("FAAF 0");
-        lmg.send_short_cmd("FILT 4");
+        lmg.send_short_cmd(b"FAAF 0")
+        lmg.send_short_cmd(b"FILT 4")
 
     lmg.set_ranges(10., 250.)
     lmg.select_values(VAL)
 
-    log = open(args.logfile, "w");
+    log = open(args.logfile, "w")
     i = 0
     try:
         lmg.cont_on()
-        log.write("# time " + " ".join(VAL) + "\n")
-        print "writing values to", args.logfile
-        print "press CTRL-C to stop"
+        log.write("# time " + b" ".join(VAL).decode('ascii') + "\n")
+        print("writing values to", args.logfile)
+        print("press CTRL-C to stop")
         while True:
             data = lmg.read_values()
             i += 1
@@ -71,7 +71,7 @@ def main():
     log.close()
 
     lmg.disconnect()
-    print "done,", i, "measurements written"
+    print("done,", i, "measurements written")
 
 
 if __name__ == "__main__":
