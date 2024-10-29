@@ -56,15 +56,15 @@ class scpi_socket:
 
 class scpi_telnet:
 
-    def __init__(self, host = "", port = 0): 
-        self._t = telnetlib.Telnet() 
+    def __init__(self, host = "", port = 0):
+        self._t = telnetlib.Telnet()
         if port > 0:
             self.connect(host, port)
 
     def connect(self, host, port):
         self._t.open(host, port, TIMEOUT)
 
-    def close(self): 
+    def close(self):
         self._t.close()
 
     def recv_str(self):
@@ -79,8 +79,8 @@ class scpi_telnet:
     def send_raw(self, msg):
         self._t.get_socket().sendall(msg)
 
-    def query(self, cmd): 
-        self.send(cmd) 
+    def query(self, cmd):
+        self.send(cmd)
         return self.recv_str()
 
     def send_cmd(self, cmd):
