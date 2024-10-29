@@ -26,10 +26,10 @@ def main():
 
     print("connecting to", args.host, "at port", args.port)
     lmg = lmg95.lmg95(args.host, args.port)
-     
+
     print("performing device reset")
     lmg.reset()
-     
+
     print("device found:", lmg.read_id()[1])
 
     print("setting up device")
@@ -66,7 +66,7 @@ def main():
             log.flush()
     except KeyboardInterrupt:
         print
-     
+
     lmg.cont_off()
     log.close()
 

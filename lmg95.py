@@ -21,7 +21,7 @@ class scpi_socket:
     def connect(self, host, port):
         self._s.connect((host, port))
         self._s.settimeout(TIMEOUT)
-        
+
     def send(self, msg):
         self._s.sendall(msg + EOS)
 
@@ -49,13 +49,13 @@ class scpi_socket:
 
     def close(self):
         self._s.close()
-    
+
     def __del__(self):
         self.close()
 
 
 class scpi_telnet:
-    
+
     def __init__(self, host = "", port = 0): 
         self._t = telnetlib.Telnet() 
         if port > 0:
@@ -105,7 +105,7 @@ class lmg95(scpi_telnet):
         self.send_brk()
         self.send_cmd(b"*cls")
         self.send_cmd(b"*rst")
-    
+
     def goto_short_commands(self):
         if not self._short_commands_enabled:
             self.send(b"syst:lang short")
@@ -172,7 +172,7 @@ class lmg95(scpi_telnet):
 
     def cont_off(self):
         self.send_short(b"cont off")
-        
+
     def disconnect(self):
         self.read_errors()
         self.goto_local()
