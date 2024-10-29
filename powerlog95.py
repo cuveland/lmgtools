@@ -1,12 +1,21 @@
 #!/usr/bin/env python3
+"""
+powerlog95.py
 
-# powerlog95.py
-#
-# Log measured values from ZES Zimmer LMG95 Power Analyzer
-#
-# 2012-07, Jan de Cuveland
+Log measured values from ZES Zimmer LMG95 Power Analyzer.
 
-import argparse, sys, time, lmg95
+This script connects to a ZES Zimmer LMG95 Power Meter via an RS232-Ethernet
+converter, logs the measured values to a specified log file, and optionally
+writes the data to an InfluxDB database.
+
+Author:
+    Jan de Cuveland (2012-07, 2024-10)
+"""
+
+import argparse
+import sys
+import time
+import lmg95
 
 HAS_INFLUXDB = False
 try:
@@ -15,9 +24,11 @@ try:
 except ImportError:
     pass
 
-VAL = b"count sctc cycr utrms itrms udc idc ucf icf uff iff p pf freq".split()
+VAL = "count sctc cycr utrms itrms udc idc ucf icf uff iff p pf s q freq".split()
+
 
 def main():
+    """Application entry point"""
     parser = argparse.ArgumentParser(
         description = "Log measured values from ZES Zimmer LMG95 Power Meter")
     parser.add_argument("host", help = "Hostname of RS232-Ethernet converter")
@@ -49,24 +60,24 @@ def main():
     print("device found:", lmg.read_id()[1])
 
     print("setting up device")
-    errors = lmg.read_errors()
+    lmg.read_errors()
 
-    # set measuremnt interval
-    lmg.send_short_cmd(b"CYCL %d" % args.interval)
+    # set measurement interval
+    lmg.send_short_cmd(f"CYCL {args.interval}")
 
     # 60Hz low pass
-    if args.lowpass == True:
-        lmg.send_short_cmd(b"FAAF 0")
-        lmg.send_short_cmd(b"FILT 4")
+    if args.lowpass:
+        lmg.send_short_cmd("FAAF 0")
+        lmg.send_short_cmd("FILT 4")
 
-    lmg.set_ranges(10., 250.)
+    # lmg.set_ranges(10., 250.)
     lmg.select_values(VAL)
 
-    log = open(args.logfile, "w")
+    log = open(args.logfile, "w", encoding="utf-8")
     i = 0
     try:
         lmg.cont_on()
-        log.write("# time " + b" ".join(VAL).decode('ascii') + "\n")
+        log.write("# time " + " ".join(VAL) + "\n")
         print("writing values to", args.logfile)
         print("press CTRL-C to stop")
         while True:
@@ -74,27 +85,27 @@ def main():
             i += 1
             data.insert(0, time.time())
             if args.verbose:
-                sys.stdout.write(" ".join([ str(x) for x in data ]) + "\n")
+                sys.stdout.write(" ".join([str(x) for x in data]) + "\n")
             else:
-                sys.stdout.write("\r{0}".format(i))
+                sys.stdout.write(f"\r{i}")
             sys.stdout.flush()
-            log.write(" ".join([ str(x) for x in data ]) + "\n")
+            log.write(" ".join([str(x) for x in data]) + "\n")
             log.flush()
             if HAS_INFLUXDB and args.influxdb:
                 item = {
                     "measurement": "powerlog",
                     "tags": {},
-                    "time" : int(data[0] * 1000),
-                    "fields": dict(zip([x.decode('ascii') for x in VAL], data[1:]))
+                    "time": int(data[0] * 1000),
+                    "fields": dict(zip(VAL, data[1:])),
                 }
                 # Set value to None if it is 9.91e+37 (NaN),
                 # 9.9E+37 (Infinity), or -9.9e+37 (-Infinity)
                 for key in item["fields"]:
-                    if item["fields"][key] in [9.91e+37, 9.9E+37, -9.9e+37]:
+                    if item["fields"][key] in [9.91e37, 9.9e37, -9.9e37]:
                         item["fields"][key] = None
                 influx.write_points([item], time_precision="ms")
     except KeyboardInterrupt:
-        print
+        print()
 
     lmg.cont_off()
     log.close()
