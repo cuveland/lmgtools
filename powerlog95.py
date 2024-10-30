@@ -27,6 +27,24 @@ except ImportError:
 VAL = "count sctc cycr utrms itrms udc idc ucf icf uff iff p pf s q freq".split()
 
 
+def send_to_influxdb(influx, data: list[float]) -> None:
+    """Send data to InfluxDB"""
+    item = {
+        "measurement": "powerlog",
+        "tags": {},
+        "time": int(data[0] * 1000),
+        "fields": dict(zip(VAL, data[1:])),
+    }
+
+    # Set value to None if it is 9.91e+37 (NaN),
+    # 9.9E+37 (Infinity), or -9.9e+37 (-Infinity)
+    for key in item["fields"]:
+        if item["fields"][key] in [9.91e37, 9.9e37, -9.9e37]:
+            item["fields"][key] = None
+
+    influx.write_points([item], time_precision="ms")
+
+
 def main():
     """Application entry point"""
     parser = argparse.ArgumentParser(
@@ -92,18 +110,7 @@ def main():
             log.write(" ".join([str(x) for x in data]) + "\n")
             log.flush()
             if HAS_INFLUXDB and args.influxdb:
-                item = {
-                    "measurement": "powerlog",
-                    "tags": {},
-                    "time": int(data[0] * 1000),
-                    "fields": dict(zip(VAL, data[1:])),
-                }
-                # Set value to None if it is 9.91e+37 (NaN),
-                # 9.9E+37 (Infinity), or -9.9e+37 (-Infinity)
-                for key in item["fields"]:
-                    if item["fields"][key] in [9.91e37, 9.9e37, -9.9e37]:
-                        item["fields"][key] = None
-                influx.write_points([item], time_precision="ms")
+                send_to_influxdb(influx, data)
     except KeyboardInterrupt:
         print()
 

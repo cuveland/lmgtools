@@ -143,7 +143,7 @@ class lmg95(scpi_telnet):
     def goto_local(self) -> None:
         self.send("gtl")
 
-    def read_id(self) -> list:
+    def read_id(self) -> list[str]:
         return self.query("*idn?").split(",")
 
     def beep(self) -> None:
@@ -164,10 +164,10 @@ class lmg95(scpi_telnet):
         else:
             self.send_short_cmd("uam auto")
 
-    def select_values(self, values: list) -> None:
+    def select_values(self, values: list[str]) -> None:
         self.send_short("actn;" + "?;".join(values) + "?")
 
-    def read_values(self) -> list:
+    def read_values(self) -> list[float]:
         values_raw = self.recv_str().strip()
         if len(values_raw) == 0:
             return []
