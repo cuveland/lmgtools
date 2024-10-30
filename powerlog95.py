@@ -24,7 +24,36 @@ try:
 except ImportError:
     pass
 
-VAL = "count sctc cycr utrms itrms udc idc ucf icf uff iff p pf s q freq".split()
+#VAL = "count sctc cycr utrms itrms udc idc ucf icf uff iff p pf s q freq".split()
+
+VAL = [
+    "count", # Measurement cycle count. Wraps back to 0 after 65535.
+    "sctc",  # Last ADC measurement count of the cycle. Wraps back to 0 after 2^31-1.
+    "cycr",  # True cycle time in seconds. Corresponds to an integer number
+             # of signal periods. On average, this time is equal to the cycle time.
+    "freq",  # Frequency in Hz.
+
+    ### Voltage and current values
+    "utrms", # True RMS voltage in V.
+    "itrms", # True RMS current in A.
+    # DC value. For a sinusoidal signal, this is 0.
+    "udc",   # DC voltage in V.
+    "idc",   # DC current in A.
+    # Crest factor: The ratio of the peak value to the RMS value. For a
+    #               sinusoidal signal, this is sqrt(2) ≈ 1.414.
+    "ucf",   # Voltage crest factor.
+    "icf",   # Current crest factor.
+    # Form factor: The ratio of the RMS value to the average value. For a
+    #              sinusoidal signal, this is pi/(2*sqrt(2)) ≈ 1.11.
+    "uff",   # Voltage form factor.
+    "iff",   # Current form factor.
+
+    ### Power values
+    "p",     # Active power in W.
+    "q",     # Reactive power in var.
+    "s",     # Apparent power in VA.
+    "pf",    # Power factor.
+]
 
 
 def send_to_influxdb(influx, data: list[float]) -> None:
@@ -83,12 +112,12 @@ def main():
     # set measurement interval
     lmg.send_short_cmd(f"CYCL {args.interval}")
 
-    # 60Hz low pass
+    # 60Hz low pass filter
     if args.lowpass:
         lmg.send_short_cmd("FAAF 0")
         lmg.send_short_cmd("FILT 4")
 
-    # lmg.set_ranges(10., 250.)
+    lmg.set_ranges(10., 250.)
     lmg.select_values(VAL)
 
     if args.logfile:
