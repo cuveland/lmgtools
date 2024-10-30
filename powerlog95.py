@@ -50,17 +50,17 @@ def main():
     parser = argparse.ArgumentParser(
         description = "Log measured values from ZES Zimmer LMG95 Power Meter")
     parser.add_argument("host", help = "Hostname of RS232-Ethernet converter")
-    parser.add_argument("logfile", help = "Log file name")
-    parser.add_argument("-p", "--port", dest = "port", type = int, default=2001,
+    parser.add_argument("-L", "--logfile", help = "Log values to file")
+    parser.add_argument("-p", "--port", type = int, default=2101,
                         help = "TCP port of RS232-Ethernet converter")
-    parser.add_argument("-v", "--verbose", dest = "verbose", action="store_true", default=False,
-                        help = "Verbose")
-    parser.add_argument("-l", "--lowpass", dest = "lowpass", action="store_true", default=False,
+    parser.add_argument("-v", "--verbose", action="store_true", default=False,
+                        help = "Dump measurements to stdout")
+    parser.add_argument("-l", "--lowpass", action="store_true", default=False,
                         help = "Enable 60 Hz low pass filter")
-    parser.add_argument("-i", "--interval", dest="interval", type=float, default=0.5,
+    parser.add_argument("-i", "--interval", type=float, default=0.5,
                         help = "Measurement interval in seconds")
     if HAS_INFLUXDB:
-        parser.add_argument("-I", "--influxdb", dest="influxdb", action="store_true", default=False,
+        parser.add_argument("-I", "--influxdb", action="store_true", default=False,
                             help = "Write data to InfluxDB")
     args = parser.parse_args()
 
@@ -91,12 +91,14 @@ def main():
     # lmg.set_ranges(10., 250.)
     lmg.select_values(VAL)
 
-    log = open(args.logfile, "w", encoding="utf-8")
+    if args.logfile:
+        log = open(args.logfile, "w", encoding="utf-8")
     i = 0
     try:
         lmg.cont_on()
-        log.write("# time " + " ".join(VAL) + "\n")
-        print("writing values to", args.logfile)
+        if args.logfile:
+            log.write("# time " + " ".join(VAL) + "\n")
+            print("writing values to", args.logfile)
         print("press CTRL-C to stop")
         while True:
             data = lmg.read_values()
@@ -107,15 +109,17 @@ def main():
             else:
                 sys.stdout.write(f"\r{i}")
             sys.stdout.flush()
-            log.write(" ".join([str(x) for x in data]) + "\n")
-            log.flush()
+            if args.logfile:
+                log.write(" ".join([str(x) for x in data]) + "\n")
+                log.flush()
             if HAS_INFLUXDB and args.influxdb:
                 send_to_influxdb(influx, data)
     except KeyboardInterrupt:
         print()
 
     lmg.cont_off()
-    log.close()
+    if args.logfile:
+        log.close()
 
     lmg.disconnect()
     print("done,", i, "measurements written")
