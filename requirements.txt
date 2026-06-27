@@ -1,3 +1,0 @@
-telnetlib-313-and-up
-influxdb
-paho-mqtt

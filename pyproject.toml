@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lmgtools"
+version = "0.1.0"
+description = "Tools for ZES Zimmer LMG precision power analyzers"
+authors = [{ name = "Jan de Cuveland", email = "cmail@cuveland.de" }]
+requires-python = ">=3.10"
+dependencies = [
+    "telnetlib-313-and-up",
+    "influxdb",
+    "paho-mqtt",
+]
+
+[project.scripts]
+powerlog95 = "powerlog95:main"
+powerlog670 = "powerlog670:main"
+
+[tool.setuptools]
+py-modules = ["lmg95", "lmg670", "powerlog95", "powerlog670"]
