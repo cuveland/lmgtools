@@ -14,6 +14,7 @@ Author:
 
 import argparse
 import json
+import signal
 import sys
 import time
 import lmg95
@@ -80,6 +81,11 @@ SENSOR_META = {
     "sctc":  ("ADC Count",             None,  None),
     "cycr":  ("Cycle Time",            "s",   None),
 }
+
+
+def _raise_keyboard_interrupt(signum, frame):
+    """Signal handler that turns SIGTERM into a KeyboardInterrupt."""
+    raise KeyboardInterrupt
 
 
 def nan_filter(value: float):
@@ -159,6 +165,12 @@ def main():
                         help="Enable 60 Hz low pass filter")
     parser.add_argument("-i", "--interval", type=float, default=0.5,
                         help="Measurement interval in seconds")
+    parser.add_argument("--current-range", type=float, default=None,
+                        help="Fixed current range in A "
+                             "(default: automatic ranging)")
+    parser.add_argument("--voltage-range", type=float, default=None,
+                        help="Fixed voltage range in V "
+                             "(default: automatic ranging)")
 
     influx_group = parser.add_argument_group("InfluxDB")
     influx_group.add_argument("--influxdb", action="store_true", default=False,
@@ -249,12 +261,20 @@ def main():
         lmg.send_short_cmd("FAAF 0")
         lmg.send_short_cmd("FILT 4")
 
-    lmg.set_ranges(10., 250.)
+    lmg.set_ranges(current=args.current_range, voltage=args.voltage_range)
     lmg.select_values(VAL)
 
     log = None
     if args.logfile:
         log = open(args.logfile, "w", encoding="utf-8")
+
+    # Treat SIGTERM (e.g. from a container/service manager) like Ctrl-C so the
+    # device is released cleanly instead of being left in remote mode.
+    signal.signal(signal.SIGTERM, _raise_keyboard_interrupt)
+
+    # The live counter only makes sense on a terminal; in a captured log it is
+    # never flushed (no newline) and just produces noise.
+    show_counter = not args.verbose and sys.stdout.isatty()
 
     i = 0
     try:
@@ -262,16 +282,17 @@ def main():
         if log:
             log.write("# time " + " ".join(VAL) + "\n")
             print("writing values to", args.logfile)
-        print("press CTRL-C to stop")
+        print("logging started; stop the process (Ctrl-C / SIGTERM) to end")
         while True:
             data = lmg.read_values()
             i += 1
             data.insert(0, time.time())
             if args.verbose:
                 sys.stdout.write(" ".join([str(x) for x in data]) + "\n")
-            else:
+                sys.stdout.flush()
+            elif show_counter:
                 sys.stdout.write(f"\r{i}")
-            sys.stdout.flush()
+                sys.stdout.flush()
             if log:
                 log.write(" ".join([str(x) for x in data]) + "\n")
                 log.flush()
@@ -282,6 +303,7 @@ def main():
     except KeyboardInterrupt:
         print()
 
+    print("stopping, releasing device")
     lmg.cont_off()
     if log:
         log.close()
