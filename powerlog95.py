@@ -156,6 +156,10 @@ def main():
                               help="InfluxDB port (default: 8086)")
     influx_group.add_argument("--influxdb-database", default="powerlog",
                               help="InfluxDB database name (default: powerlog)")
+    influx_group.add_argument("--influxdb-username", default=None,
+                              help="InfluxDB username (omit for no authentication)")
+    influx_group.add_argument("--influxdb-password", default=None,
+                              help="InfluxDB password")
 
     mqtt_group = parser.add_argument_group("MQTT")
     mqtt_group.add_argument("--mqtt", action="store_true", default=False,
@@ -178,12 +182,20 @@ def main():
 
     influx = None
     if args.influxdb:
-        influx = influxdb.InfluxDBClient(
-            host=args.influxdb_host,
-            port=args.influxdb_port,
-            database=args.influxdb_database,
-        )
-        influx.create_database(args.influxdb_database)
+        influx_kwargs = {
+            "host": args.influxdb_host,
+            "port": args.influxdb_port,
+            "database": args.influxdb_database,
+        }
+        if args.influxdb_username:
+            influx_kwargs["username"] = args.influxdb_username
+            influx_kwargs["password"] = args.influxdb_password
+        influx = influxdb.InfluxDBClient(**influx_kwargs)
+        try:
+            influx.create_database(args.influxdb_database)
+        except influxdb.exceptions.InfluxDBClientError as e:
+            # A write-only user cannot create databases; assume it exists.
+            print("warning: could not create database:", e, file=sys.stderr)
 
     mqtt_client = None
     if args.mqtt:
