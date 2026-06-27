@@ -231,10 +231,14 @@ def main():
     lmg = lmg95.lmg95(args.host, args.port)
 
     print("performing device reset")
-    lmg.cont_off()
     lmg.reset()
 
-    print("device found:", lmg.read_id()[1])
+    device_id = lmg.read_id()
+    if len(device_id) > 1:
+        print("device found:", device_id[1])
+    else:
+        print("warning: unexpected device identification:", device_id,
+              file=sys.stderr)
 
     print("setting up device")
     lmg.read_errors()

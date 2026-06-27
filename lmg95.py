@@ -8,6 +8,7 @@
 
 import socket
 import telnetlib
+import time
 
 EOS = "\r\n"
 TIMEOUT = 5
@@ -91,6 +92,26 @@ class scpi_telnet:
     def send_brk(self) -> None:
         self.send_raw(b"\xff\xf3")
 
+    def drain(self, settle: float = 0.5, timeout: float = 5.0) -> None:
+        """Discard any buffered or in-flight input until the line is quiet.
+
+        Reads and throws away pending data (e.g. leftover continuous
+        measurements from a previous session) until no further data arrives
+        for `settle` seconds, or `timeout` seconds have elapsed in total. This
+        resynchronizes the command/response stream before issuing queries.
+        """
+        end = time.monotonic() + timeout
+        quiet_until = time.monotonic() + settle
+        while time.monotonic() < end and time.monotonic() < quiet_until:
+            try:
+                data = self._t.read_very_eager()
+            except EOFError:
+                break
+            if data:
+                quiet_until = time.monotonic() + settle
+            else:
+                time.sleep(0.05)
+
     def get_socket(self) -> socket.socket:
         return self._t.get_socket()
 
@@ -102,7 +123,12 @@ class lmg95(scpi_telnet):
     _short_commands_enabled = False
 
     def reset(self) -> None:
+        # Interrupt and stop any continuous measurement left running by a
+        # previous session, then flush stale data so the command/response
+        # stream is back in sync before we issue *cls/*rst.
         self.send_brk()
+        self.cont_off()
+        self.drain()
         self.send_cmd("*cls")
         self.send_cmd("*rst")
 
