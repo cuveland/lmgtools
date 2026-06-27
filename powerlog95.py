@@ -101,6 +101,19 @@ def send_to_influxdb(influx, data: list[float]) -> None:
     influx.write_points([item], time_precision="ms")
 
 
+def on_mqtt_connect(client, userdata, flags, reason_code, *args) -> None:
+    """Log the result of the MQTT connection attempt.
+
+    Works with both paho-mqtt 1.x (reason_code is an int) and 2.x
+    (reason_code is a ReasonCode object; properties arrive in *args).
+    """
+    failed = getattr(reason_code, "is_failure", reason_code != 0)
+    if failed:
+        print("error: MQTT connection failed:", reason_code, file=sys.stderr)
+    else:
+        print("MQTT connected")
+
+
 def publish_mqtt_discovery(client, topic: str) -> None:
     """Publish Home Assistant MQTT Discovery messages for all sensors."""
     device = {
@@ -170,6 +183,10 @@ def main():
                             help="MQTT broker port (default: 1883)")
     mqtt_group.add_argument("--mqtt-topic", default="lmgtools",
                             help="MQTT base topic (default: lmgtools)")
+    mqtt_group.add_argument("--mqtt-username", default=None,
+                            help="MQTT username (omit for no authentication)")
+    mqtt_group.add_argument("--mqtt-password", default=None,
+                            help="MQTT password")
 
     args = parser.parse_args()
 
@@ -199,7 +216,13 @@ def main():
 
     mqtt_client = None
     if args.mqtt:
-        mqtt_client = mqtt.Client()
+        if hasattr(mqtt, "CallbackAPIVersion"):
+            mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+        else:
+            mqtt_client = mqtt.Client()
+        mqtt_client.on_connect = on_mqtt_connect
+        if args.mqtt_username:
+            mqtt_client.username_pw_set(args.mqtt_username, args.mqtt_password)
         mqtt_client.connect(args.mqtt_host, args.mqtt_port)
         mqtt_client.loop_start()
         publish_mqtt_discovery(mqtt_client, args.mqtt_topic)

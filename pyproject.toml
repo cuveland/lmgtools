@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lmgtools"
-version = "0.2.0"
+version = "0.3.0"
 description = "Tools for ZES Zimmer LMG precision power analyzers"
 authors = [{ name = "Jan de Cuveland", email = "cmail@cuveland.de" }]
 requires-python = ">=3.10"
